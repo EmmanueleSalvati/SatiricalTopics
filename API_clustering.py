@@ -51,27 +51,6 @@ def get_max_id(text_file=None):
     return max_id
 
 
-def remove_screen_name(tweet):
-    """For a given tweet, remove the screen name (e.g. @LastWeekTonight) and
-    return the tweet"""
-
-    new_tweet = []
-    words = tweet.split()
-    for word in words:
-        if 'http' not in word and '@' not in word:
-            new_tweet.append(word)
-
-    return ' '.join(new_tweet)
-
-
-# def calc_min_distance(cluster, centroid):
-#     """For every tweet in the cluster, calculate the minimum distance between
-#     a tweet and the centroid"""
-
-#     distances = []
-#     for tweet in cluster:
-
-
 if __name__ == '__main__':
     max_id = None
     if os.path.exists("max_id.txt"):
