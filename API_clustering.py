@@ -5,6 +5,11 @@ from requests_oauthlib import OAuth1
 import os.path
 import pickle as pkl
 import Twitter_keys as tks
+import argparse
+
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+                    level=logging.INFO)
 
 
 def oauth():
@@ -52,22 +57,29 @@ def get_max_id(text_file=None):
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("username", help="Twitter username, without @")
+    args = parser.parse_args()
+
+    username = args.username
+
     max_id = None
-    if os.path.exists("max_id.txt"):
-        max_id = get_max_id('max_id.txt')
+    if os.path.exists("%s_max_id.txt" % username):
+        max_id = get_max_id('%s_max_id.txt' % username)
 
     oauth = oauth()
-    tweets = tweets(max_id)
+    tweets = tweets(oauth, max_id, screen_name=username)
 
-    LastWeekTonight = {}
-    if os.path.exists('LastWeekTonight_tweets.pkl'):
-        LastWeekTonight = get_pkl_dict('LastWeekTonight_tweets.pkl')
+    tweets_tosave = {}
+    if os.path.exists('%s_tweets.pkl' % username):
+        tweets_tosave = get_pkl_dict('%s_tweets.pkl' % username)
 
     for tweet in tweets:
-        LastWeekTonight[tweet['id']] = tweet['text']
+        tweets_tosave[tweet['id']] = tweet['text']
 
-    with open('max_id.txt', 'w') as max_text:
+    with open('%s_max_id.txt' % username, 'w') as max_text:
         max_text.write(str(tweets[-1]['id']))
 
-    with open('LastWeekTonight_tweets.pkl', 'w') as pklfile:
-        pkl.dump(LastWeekTonight, pklfile)
+    with open('%s_tweets.pkl' % username, 'w') as pklfile:
+        pkl.dump(tweets_tosave, pklfile)

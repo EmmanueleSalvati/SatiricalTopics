@@ -7,6 +7,7 @@ import pickle as pkl
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import string
+import argparse
 
 from gensim import corpora, models, similarities
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
@@ -42,7 +43,10 @@ def nopunkt_tokenize(sentence='a b c'):
     punctuation = [char for char in string.punctuation]
     stops = stopwords.words('english')
     stops.extend(punctuation)
-    stops.extend(["\'s", "'", '"', '``', "''"])
+    stops.extend(["\'s", "'", '"', '``', "''", "\'re", "'ll", "m",
+                  "last", "week", "tonight", "tomorrow", "n't", "ca",
+                  "jon", "stewart", "tdsbreakingnews", "'m", "us",
+                  "amp'"])
     tokens = [token for token in word_tokenize(sentence.lower())
               if token not in stops]
 
@@ -61,7 +65,14 @@ def dict_to_list(tweets_dict):
 
 
 if __name__ == '__main__':
-    tweets_dict = load_tweets('LastWeekTonight_tweets.pkl')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("username", help="Twitter username, without @")
+    args = parser.parse_args()
+
+    username = args.username
+
+    tweets_dict = load_tweets('%s_tweets.pkl' % username)
     documents = dict_to_list(tweets_dict)
 
     # list of lists of words
@@ -73,10 +84,18 @@ if __name__ == '__main__':
     # corpus in bag-of-words space
     corpus = [dictionary.doc2bow(text) for text in texts]
 
+    # Transform the corpus into Tf-Idf space
+    tfidf = models.TfidfModel(corpus)
+    corpus_tfidf = tfidf[corpus]
 
+    # Compute topics with Latent Semantic Indexing (LSA)
+    lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=6)
+    corpus_lsi = lsi[corpus_tfidf]
 
-
-
+    # Compute topics with Latent Dirichlet Allocation (LDA)
+    lda = models.LdaModel(corpus, id2word=dictionary, num_topics=6,
+                          passes=20, update_every=1, chunksize=1000)
+    corpus_lda = lda[corpus]
 
 
 
